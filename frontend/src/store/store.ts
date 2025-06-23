@@ -1,20 +1,33 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import rootReducer from "./root-reducer";
-import { persistStore } from "redux-persist";
+import { persistReducer, persistStore } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import {
   useDispatch,
   useSelector,
   type TypedUseSelectorHook,
 } from "react-redux";
+import { baseCreateApi } from "./api/baseCreateApi";
+
+const persistConfig = {
+  key: "root",
+  storage,
+};
+
+const persistedReducer = persistReducer(
+  persistConfig,
+  combineReducers({
+    ...rootReducer,
+    [baseCreateApi.reducerPath]: baseCreateApi.reducer,
+  })
+);
 
 const appStore = configureStore({
-  reducer: rootReducer,
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredPaths: ["form.register"],
-      },
-    }),
+      serializableCheck: false,
+    }).concat(baseCreateApi.middleware),
 });
 
 export default appStore;
